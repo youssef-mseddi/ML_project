@@ -1,0 +1,262 @@
+{% extends "base.html" %}
+{% block content %}
+
+<div class="mb-8">
+    <div class="flex justify-between items-center">
+        <div>
+            <h1 class="text-4xl font-black text-gray-900 mb-2">Historique des Analyses</h1>
+            <p class="text-gray-600">Consultez et exportez toutes vos prédictions passées</p>
+        </div>
+        <button onclick="exportData()" class="shine-effect bg-gradient-to-r from-green-500 to-emerald-600 text-white px-6 py-3 rounded-xl font-bold hover:shadow-xl transition flex items-center gap-2">
+            <i class="fa-solid fa-download"></i> Exporter CSV
+        </button>
+    </div>
+</div>
+
+<!-- Statistiques Rapides -->
+<div class="grid md:grid-cols-4 gap-6 mb-8">
+    <div class="card-hover bg-gradient-to-br from-blue-500 to-cyan-600 p-6 rounded-2xl shadow-lg text-white">
+        <div class="flex items-center justify-between mb-4">
+            <div class="w-12 h-12 bg-white/20 rounded-xl flex items-center justify-center">
+                <i class="fa-solid fa-chart-line text-2xl"></i>
+            </div>
+        </div>
+        <p class="text-white/80 text-sm mb-1">Total Prédictions</p>
+        <p class="text-4xl font-black">{{ preds|length }}</p>
+    </div>
+
+    <div class="card-hover bg-gradient-to-br from-purple-500 to-pink-600 p-6 rounded-2xl shadow-lg text-white">
+        <div class="flex items-center justify-between mb-4">
+            <div class="w-12 h-12 bg-white/20 rounded-xl flex items-center justify-center">
+                <i class="fa-solid fa-bicycle text-2xl"></i>
+            </div>
+        </div>
+        <p class="text-white/80 text-sm mb-1">Demande Moyenne</p>
+        {% set avg_demand = preds|map(attribute='predicted_demand')|sum / preds|length if preds|length > 0 else 0 %}
+        <p class="text-4xl font-black">{{ avg_demand|int }}</p>
+    </div>
+
+    <div class="card-hover bg-gradient-to-br from-orange-500 to-red-600 p-6 rounded-2xl shadow-lg text-white">
+        <div class="flex items-center justify-between mb-4">
+            <div class="w-12 h-12 bg-white/20 rounded-xl flex items-center justify-center">
+                <i class="fa-solid fa-arrow-trend-up text-2xl"></i>
+            </div>
+        </div>
+        <p class="text-white/80 text-sm mb-1">Pic Maximum</p>
+        {% set max_demand = preds|map(attribute='predicted_demand')|max if preds|length > 0 else 0 %}
+        <p class="text-4xl font-black">{{ max_demand }}</p>
+    </div>
+
+    <div class="card-hover bg-gradient-to-br from-green-500 to-emerald-600 p-6 rounded-2xl shadow-lg text-white">
+        <div class="flex items-center justify-between mb-4">
+            <div class="w-12 h-12 bg-white/20 rounded-xl flex items-center justify-center">
+                <i class="fa-solid fa-clock text-2xl"></i>
+            </div>
+        </div>
+        <p class="text-white/80 text-sm mb-1">Dernière Analyse</p>
+        <p class="text-xl font-bold">
+            {% if preds|length > 0 %}
+                {{ preds[0].date_posted.strftime('%d/%m') }}
+            {% else %}
+                N/A
+            {% endif %}
+        </p>
+    </div>
+</div>
+
+<!-- Filtres et Recherche -->
+<div class="bg-white p-6 rounded-2xl shadow-lg border border-gray-100 mb-8">
+    <div class="grid md:grid-cols-4 gap-4">
+        <div class="relative">
+            <i class="fa-solid fa-magnifying-glass absolute left-4 top-1/2 -translate-y-1/2 text-gray-400"></i>
+            <input type="text" id="searchInput" placeholder="Rechercher..." 
+                   class="w-full pl-12 pr-4 py-3 border-2 border-gray-200 rounded-xl focus:border-indigo-500 focus:ring-4 focus:ring-indigo-100 transition"
+                   onkeyup="filterTable()">
+        </div>
+        
+        <select id="segmentFilter" class="px-4 py-3 border-2 border-gray-200 rounded-xl focus:border-indigo-500 focus:ring-4 focus:ring-indigo-100 transition" onchange="filterTable()">
+            <option value="">Tous les segments</option>
+            <option value="Haute Demande">Haute Demande</option>
+            <option value="Standard">Standard</option>
+            <option value="Loisirs">Loisirs</option>
+            <option value="Faible">Faible</option>
+        </select>
+
+        <select id="sortBy" class="px-4 py-3 border-2 border-gray-200 rounded-xl focus:border-indigo-500 focus:ring-4 focus:ring-indigo-100 transition" onchange="sortTable()">
+            <option value="date">Plus récent</option>
+            <option value="demand-high">Demande (élevée)</option>
+            <option value="demand-low">Demande (faible)</option>
+            <option value="temp-high">Temp. (élevée)</option>
+        </select>
+
+        <button onclick="resetFilters()" class="px-4 py-3 bg-gray-100 hover:bg-gray-200 rounded-xl font-medium transition">
+            <i class="fa-solid fa-rotate-right mr-2"></i> Réinitialiser
+        </button>
+    </div>
+</div>
+
+<!-- Table des Prédictions -->
+<div class="bg-white rounded-2xl shadow-xl overflow-hidden border border-gray-100">
+    <div class="overflow-x-auto">
+        <table class="min-w-full" id="historyTable">
+            <thead class="bg-gradient-to-r from-indigo-600 to-purple-600 text-white">
+                <tr>
+                    <th class="py-5 px-6 text-left font-bold">
+                        <i class="fa-solid fa-calendar mr-2"></i> Date & Heure
+                    </th>
+                    <th class="py-5 px-6 text-left font-bold">
+                        <i class="fa-solid fa-clock mr-2"></i> Heure Simulée
+                    </th>
+                    <th class="py-5 px-6 text-left font-bold">
+                        <i class="fa-solid fa-temperature-half mr-2"></i> Température
+                    </th>
+                    <th class="py-5 px-6 text-left font-bold">
+                        <i class="fa-solid fa-bicycle mr-2"></i> Demande
+                    </th>
+                    <th class="py-5 px-6 text-left font-bold">
+                        <i class="fa-solid fa-tag mr-2"></i> Segment
+                    </th>
+                    <th class="py-5 px-6 text-center font-bold">
+                        <i class="fa-solid fa-ellipsis mr-2"></i> Actions
+                    </th>
+                </tr>
+            </thead>
+            <tbody class="divide-y divide-gray-200">
+                {% for pred in preds %}
+                <tr class="hover:bg-indigo-50 transition cursor-pointer">
+                    <td class="py-4 px-6">
+                        <div class="flex items-center gap-3">
+                            <div class="w-10 h-10 bg-indigo-100 rounded-lg flex items-center justify-center">
+                                <i class="fa-solid fa-calendar-day text-indigo-600"></i>
+                            </div>
+                            <div>
+                                <div class="font-semibold text-gray-900">{{ pred.date_posted.strftime('%d/%m/%Y') }}</div>
+                                <div class="text-sm text-gray-500">{{ pred.date_posted.strftime('%H:%M') }}</div>
+                            </div>
+                        </div>
+                    </td>
+                    <td class="py-4 px-6">
+                        <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-semibold bg-blue-100 text-blue-800">
+                            <i class="fa-solid fa-clock mr-1"></i> {{ pred.hour }}h00
+                        </span>
+                    </td>
+                    <td class="py-4 px-6">
+                        <div class="flex items-center gap-2">
+                            {% if pred.temp > 25 %}
+                                <i class="fa-solid fa-sun text-orange-500"></i>
+                            {% elif pred.temp > 15 %}
+                                <i class="fa-solid fa-cloud-sun text-yellow-500"></i>
+                            {% else %}
+                                <i class="fa-solid fa-snowflake text-blue-500"></i>
+                            {% endif %}
+                            <span class="font-semibold">{{ pred.temp }}°C</span>
+                        </div>
+                    </td>
+                    <td class="py-4 px-6">
+                        <div class="flex items-center gap-3">
+                            <div class="flex-1">
+                                <div class="text-2xl font-black text-indigo-600">{{ pred.predicted_demand }}</div>
+                                <div class="text-xs text-gray-500">vélos</div>
+                            </div>
+                            {% if pred.predicted_demand > 300 %}
+                                <span class="px-2 py-1 bg-red-100 text-red-700 rounded text-xs font-bold">ÉLEVÉ</span>
+                            {% elif pred.predicted_demand > 150 %}
+                                <span class="px-2 py-1 bg-yellow-100 text-yellow-700 rounded text-xs font-bold">MOYEN</span>
+                            {% else %}
+                                <span class="px-2 py-1 bg-green-100 text-green-700 rounded text-xs font-bold">FAIBLE</span>
+                            {% endif %}
+                        </div>
+                    </td>
+                    <td class="py-4 px-6">
+                        <span class="inline-flex items-center px-3 py-2 rounded-xl text-sm font-semibold
+                            {% if 'Haute' in pred.segment %}bg-red-100 text-red-800
+                            {% elif 'Loisirs' in pred.segment %}bg-yellow-100 text-yellow-800
+                            {% elif 'Faible' in pred.segment %}bg-gray-100 text-gray-800
+                            {% else %}bg-blue-100 text-blue-800{% endif %}">
+                            {{ pred.segment }}
+                        </span>
+                    </td>
+                    <td class="py-4 px-6 text-center">
+                        <div class="flex items-center justify-center gap-2">
+                            <button class="w-8 h-8 bg-indigo-100 hover:bg-indigo-200 rounded-lg flex items-center justify-center transition" title="Détails">
+                                <i class="fa-solid fa-eye text-indigo-600"></i>
+                            </button>
+                            <button class="w-8 h-8 bg-green-100 hover:bg-green-200 rounded-lg flex items-center justify-center transition" title="Dupliquer">
+                                <i class="fa-solid fa-copy text-green-600"></i>
+                            </button>
+                        </div>
+                    </td>
+                </tr>
+                {% else %}
+                <tr>
+                    <td colspan="6" class="py-16 text-center">
+                        <div class="flex flex-col items-center justify-center">
+                            <div class="w-24 h-24 bg-gray-100 rounded-full flex items-center justify-center mb-4">
+                                <i class="fa-solid fa-inbox text-4xl text-gray-400"></i>
+                            </div>
+                            <h3 class="text-xl font-bold text-gray-900 mb-2">Aucun historique disponible</h3>
+                            <p class="text-gray-600 mb-6">Lancez votre première analyse pour voir les résultats ici</p>
+                            <a href="{{ url_for('dashboard') }}" class="bg-indigo-600 text-white px-6 py-3 rounded-xl font-semibold hover:bg-indigo-700 transition">
+                                <i class="fa-solid fa-plus mr-2"></i> Nouvelle Analyse
+                            </a>
+                        </div>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<script>
+function filterTable() {
+    const searchInput = document.getElementById('searchInput').value.toLowerCase();
+    const segmentFilter = document.getElementById('segmentFilter').value.toLowerCase();
+    const table = document.getElementById('historyTable');
+    const rows = table.getElementsByTagName('tr');
+
+    for (let i = 1; i < rows.length; i++) {
+        const row = rows[i];
+        const text = row.textContent.toLowerCase();
+        const segment = row.cells[4] ? row.cells[4].textContent.toLowerCase() : '';
+        
+        const matchesSearch = text.includes(searchInput);
+        const matchesSegment = !segmentFilter || segment.includes(segmentFilter);
+        
+        row.style.display = matchesSearch && matchesSegment ? '' : 'none';
+    }
+}
+
+function sortTable() {
+    const sortBy = document.getElementById('sortBy').value;
+    const table = document.getElementById('historyTable');
+    const tbody = table.tBodies[0];
+    const rows = Array.from(tbody.rows);
+    
+    rows.sort((a, b) => {
+        if (sortBy === 'demand-high') {
+            return parseInt(b.cells[3].textContent) - parseInt(a.cells[3].textContent);
+        } else if (sortBy === 'demand-low') {
+            return parseInt(a.cells[3].textContent) - parseInt(b.cells[3].textContent);
+        } else if (sortBy === 'temp-high') {
+            return parseFloat(b.cells[2].textContent) - parseFloat(a.cells[2].textContent);
+        }
+        return 0;
+    });
+    
+    rows.forEach(row => tbody.appendChild(row));
+}
+
+function resetFilters() {
+    document.getElementById('searchInput').value = '';
+    document.getElementById('segmentFilter').value = '';
+    document.getElementById('sortBy').value = 'date';
+    filterTable();
+}
+
+function exportData() {
+    alert('Fonction d\'export CSV - À implémenter dans le backend Python');
+}
+</script>
+
+{% endblock %}
