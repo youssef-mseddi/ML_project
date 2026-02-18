@@ -1,0 +1,271 @@
+{% extends "base.html" %}
+{% block content %}
+
+<div class="mb-8">
+    <h1 class="text-4xl font-black text-gray-900 mb-2">📊 Statistiques Globales</h1>
+    <p class="text-gray-600">Vue d'ensemble de toutes vos analyses et prédictions</p>
+</div>
+
+<!-- Statistiques Principales -->
+<div class="grid md:grid-cols-4 gap-6 mb-8">
+    <div class="card-hover bg-gradient-to-br from-blue-500 to-cyan-600 p-6 rounded-2xl shadow-lg text-white">
+        <div class="flex items-center justify-between mb-4">
+            <div class="w-12 h-12 bg-white/20 rounded-xl flex items-center justify-center">
+                <i class="fa-solid fa-chart-line text-2xl"></i>
+            </div>
+        </div>
+        <p class="text-white/80 text-sm mb-1">Total Prédictions</p>
+        <p class="text-5xl font-black" id="totalPredictions">0</p>
+        <p class="text-xs text-white/70 mt-2">Analyses effectuées</p>
+    </div>
+
+    <div class="card-hover bg-gradient-to-br from-purple-500 to-pink-600 p-6 rounded-2xl shadow-lg text-white">
+        <div class="flex items-center justify-between mb-4">
+            <div class="w-12 h-12 bg-white/20 rounded-xl flex items-center justify-center">
+                <i class="fa-solid fa-bicycle text-2xl"></i>
+            </div>
+        </div>
+        <p class="text-white/80 text-sm mb-1">Demande Moyenne</p>
+        <p class="text-5xl font-black" id="avgDemand">0</p>
+        <p class="text-xs text-white/70 mt-2">vélos par prédiction</p>
+    </div>
+
+    <div class="card-hover bg-gradient-to-br from-orange-500 to-red-600 p-6 rounded-2xl shadow-lg text-white">
+        <div class="flex items-center justify-between mb-4">
+            <div class="w-12 h-12 bg-white/20 rounded-xl flex items-center justify-center">
+                <i class="fa-solid fa-arrow-trend-up text-2xl"></i>
+            </div>
+        </div>
+        <p class="text-white/80 text-sm mb-1">Pic Maximum</p>
+        <p class="text-5xl font-black" id="maxDemand">0</p>
+        <p class="text-xs text-white/70 mt-2">demande la plus élevée</p>
+    </div>
+
+    <div class="card-hover bg-gradient-to-br from-green-500 to-emerald-600 p-6 rounded-2xl shadow-lg text-white">
+        <div class="flex items-center justify-between mb-4">
+            <div class="w-12 h-12 bg-white/20 rounded-xl flex items-center justify-center">
+                <i class="fa-solid fa-arrow-trend-down text-2xl"></i>
+            </div>
+        </div>
+        <p class="text-white/80 text-sm mb-1">Minimum</p>
+        <p class="text-5xl font-black" id="minDemand">0</p>
+        <p class="text-xs text-white/70 mt-2">demande la plus faible</p>
+    </div>
+</div>
+
+<!-- Répartition Casual vs Registered -->
+<div class="grid md:grid-cols-2 gap-8 mb-8">
+    <!-- Statistiques Utilisateurs -->
+    <div class="bg-white p-8 rounded-3xl shadow-xl border border-gray-100">
+        <h3 class="text-2xl font-bold mb-6 text-gray-900 flex items-center gap-3">
+            <div class="w-10 h-10 bg-gradient-to-br from-yellow-400 to-orange-500 rounded-full flex items-center justify-center">
+                <i class="fa-solid fa-users text-white"></i>
+            </div>
+            Répartition des Utilisateurs
+        </h3>
+        
+        <div class="space-y-6">
+            <!-- Casual Users -->
+            <div>
+                <div class="flex items-center justify-between mb-2">
+                    <div class="flex items-center gap-2">
+                        <i class="fa-solid fa-user text-yellow-600"></i>
+                        <span class="font-semibold text-gray-700">Utilisateurs Occasionnels (Casual)</span>
+                    </div>
+                    <span class="text-2xl font-black text-yellow-600" id="casualPercentage">0%</span>
+                </div>
+                <div class="w-full bg-gray-200 rounded-full h-4">
+                    <div class="bg-gradient-to-r from-yellow-400 to-orange-500 h-4 rounded-full transition-all duration-500" id="casualBar" style="width: 0%"></div>
+                </div>
+                <p class="text-sm text-gray-600 mt-2">
+                    Total: <span class="font-bold" id="totalCasual">0</span> utilisateurs
+                </p>
+                <p class="text-xs text-gray-500 mt-1">
+                    💡 Utilisateurs sans abonnement, location ponctuelle
+                </p>
+            </div>
+
+            <!-- Registered Users -->
+            <div>
+                <div class="flex items-center justify-between mb-2">
+                    <div class="flex items-center gap-2">
+                        <i class="fa-solid fa-user-check text-green-600"></i>
+                        <span class="font-semibold text-gray-700">Utilisateurs Enregistrés (Registered)</span>
+                    </div>
+                    <span class="text-2xl font-black text-green-600" id="registeredPercentage">0%</span>
+                </div>
+                <div class="w-full bg-gray-200 rounded-full h-4">
+                    <div class="bg-gradient-to-r from-green-400 to-emerald-500 h-4 rounded-full transition-all duration-500" id="registeredBar" style="width: 0%"></div>
+                </div>
+                <p class="text-sm text-gray-600 mt-2">
+                    Total: <span class="font-bold" id="totalRegistered">0</span> utilisateurs
+                </p>
+                <p class="text-xs text-gray-500 mt-1">
+                    💡 Utilisateurs avec abonnement, fidélité élevée
+                </p>
+            </div>
+        </div>
+
+        <!-- Explication -->
+        <div class="mt-8 p-4 bg-indigo-50 rounded-xl border border-indigo-100">
+            <h4 class="font-bold text-sm text-indigo-900 mb-2 flex items-center gap-2">
+                <i class="fa-solid fa-info-circle"></i> Comment ces chiffres sont calculés ?
+            </h4>
+            <p class="text-xs text-gray-700 leading-relaxed">
+                Les totaux Casual et Registered représentent la <strong>somme cumulée</strong> de toutes vos prédictions. 
+                Si vous avez prédit 85 casual et 365 registered pour une première analyse, puis 120 casual et 450 registered 
+                pour une deuxième, le total sera <strong>205 casual (19%)</strong> et <strong>815 registered (81%)</strong>.
+                Ces statistiques vous aident à comprendre la répartition globale de votre base d'utilisateurs prévue.
+            </p>
+        </div>
+    </div>
+
+    <!-- Insights et Recommandations -->
+    <div class="bg-white p-8 rounded-3xl shadow-xl border border-gray-100">
+        <h3 class="text-2xl font-bold mb-6 text-gray-900 flex items-center gap-3">
+            <div class="w-10 h-10 bg-gradient-to-br from-purple-400 to-indigo-500 rounded-full flex items-center justify-center">
+                <i class="fa-solid fa-lightbulb text-white"></i>
+            </div>
+            Insights & Recommandations
+        </h3>
+
+        <div class="space-y-4" id="insightsContainer">
+            <!-- Généré dynamiquement -->
+        </div>
+    </div>
+</div>
+
+<!-- Graphiques (optionnel - à implémenter plus tard) -->
+<div class="bg-white p-8 rounded-3xl shadow-xl border border-gray-100">
+    <h3 class="text-2xl font-bold mb-6 text-gray-900 flex items-center gap-3">
+        <div class="w-10 h-10 bg-gradient-to-br from-blue-400 to-cyan-500 rounded-full flex items-center justify-center">
+            <i class="fa-solid fa-chart-pie text-white"></i>
+        </div>
+        Analyse Détaillée
+    </h3>
+    
+    <div class="grid md:grid-cols-3 gap-6">
+        <div class="text-center p-6 bg-gradient-to-br from-blue-50 to-cyan-50 rounded-2xl">
+            <i class="fa-solid fa-calendar-days text-4xl text-blue-600 mb-4"></i>
+            <p class="text-3xl font-black text-gray-900" id="activeDays">0</p>
+            <p class="text-sm text-gray-600 mt-2">Jours analysés</p>
+        </div>
+        
+        <div class="text-center p-6 bg-gradient-to-br from-purple-50 to-pink-50 rounded-2xl">
+            <i class="fa-solid fa-clock text-4xl text-purple-600 mb-4"></i>
+            <p class="text-3xl font-black text-gray-900" id="peakHours">0</p>
+            <p class="text-sm text-gray-600 mt-2">Heures de pointe identifiées</p>
+        </div>
+        
+        <div class="text-center p-6 bg-gradient-to-br from-orange-50 to-red-50 rounded-2xl">
+            <i class="fa-solid fa-layer-group text-4xl text-orange-600 mb-4"></i>
+            <p class="text-3xl font-black text-gray-900" id="uniqueClusters">0</p>
+            <p class="text-sm text-gray-600 mt-2">Segments identifiés</p>
+        </div>
+    </div>
+</div>
+
+<script>
+// Charger les statistiques au chargement de la page
+document.addEventListener('DOMContentLoaded', async function() {
+    try {
+        const response = await fetch('/api/stats');
+        const data = await response.json();
+        
+        // Statistiques principales
+        document.getElementById('totalPredictions').textContent = data.total;
+        document.getElementById('avgDemand').textContent = Math.round(data.average_demand);
+        document.getElementById('maxDemand').textContent = data.max_demand;
+        document.getElementById('minDemand').textContent = data.min_demand;
+        
+        // Répartition Casual vs Registered
+        const casualPercent = data.casual_percentage || 0;
+        const registeredPercent = data.registered_percentage || 0;
+        
+        document.getElementById('casualPercentage').textContent = casualPercent.toFixed(1) + '%';
+        document.getElementById('registeredPercentage').textContent = registeredPercent.toFixed(1) + '%';
+        document.getElementById('totalCasual').textContent = data.total_casual.toLocaleString();
+        document.getElementById('totalRegistered').textContent = data.total_registered.toLocaleString();
+        
+        // Animer les barres
+        setTimeout(() => {
+            document.getElementById('casualBar').style.width = casualPercent + '%';
+            document.getElementById('registeredBar').style.width = registeredPercent + '%';
+        }, 100);
+        
+        // Générer les insights
+        generateInsights(data);
+        
+    } catch (error) {
+        console.error('Erreur chargement stats:', error);
+    }
+});
+
+function generateInsights(data) {
+    const container = document.getElementById('insightsContainer');
+    const insights = [];
+    
+    // Insight 1: Ratio Casual/Registered
+    const casualPercent = data.casual_percentage || 0;
+    if (casualPercent > 25) {
+        insights.push({
+            icon: 'fa-exclamation-triangle',
+            color: 'yellow',
+            title: 'Taux de Casual élevé',
+            text: `${casualPercent.toFixed(1)}% d'utilisateurs occasionnels. Lancez des campagnes d'abonnement pour convertir les casual en registered.`
+        });
+    } else if (casualPercent < 15) {
+        insights.push({
+            icon: 'fa-check-circle',
+            color: 'green',
+            title: 'Excellente fidélisation',
+            text: `${(100 - casualPercent).toFixed(1)}% d'utilisateurs enregistrés. Votre base est très fidèle !`
+        });
+    }
+    
+    // Insight 2: Volume global
+    const totalDemand = data.total_casual + data.total_registered;
+    if (totalDemand > 10000) {
+        insights.push({
+            icon: 'fa-rocket',
+            color: 'purple',
+            title: 'Volume Important',
+            text: `${totalDemand.toLocaleString()} utilisateurs prévus au total. Assurez-vous d'avoir une flotte suffisante.`
+        });
+    }
+    
+    // Insight 3: Demande moyenne
+    if (data.average_demand > 400) {
+        insights.push({
+            icon: 'fa-arrow-trend-up',
+            color: 'blue',
+            title: 'Forte Demande Moyenne',
+            text: `Moyenne de ${Math.round(data.average_demand)} vélos par prédiction. Optimisez votre stratégie de redistribution.`
+        });
+    }
+    
+    // Afficher les insights
+    if (insights.length === 0) {
+        insights.push({
+            icon: 'fa-info-circle',
+            color: 'blue',
+            title: 'Commencez à analyser',
+            text: 'Créez plus de prédictions pour obtenir des insights personnalisés sur votre activité.'
+        });
+    }
+    
+    container.innerHTML = insights.map(insight => `
+        <div class="p-4 bg-${insight.color}-50 border-l-4 border-${insight.color}-500 rounded-r-xl">
+            <div class="flex items-start gap-3">
+                <i class="fa-solid ${insight.icon} text-${insight.color}-600 text-xl mt-1"></i>
+                <div>
+                    <h4 class="font-bold text-gray-900 mb-1">${insight.title}</h4>
+                    <p class="text-sm text-gray-700">${insight.text}</p>
+                </div>
+            </div>
+        </div>
+    `).join('');
+}
+</script>
+
+{% endblock %}

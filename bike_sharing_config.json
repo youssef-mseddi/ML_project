@@ -1,0 +1,23 @@
+{
+  "dossier_modeles": "D:\\Esprit\\4BI 8\\Machine Learning\\Projet Location Vélo\\Deploiement_Velo",
+  "fichiers": [
+    "DSO1_prediction_demande.pkl",
+    "DSO2_segmentation_clusters.pkl",
+    "DSO3_recommandations_marketing.pkl"
+  ],
+  "dso1": {
+    "r2_test": 0.7784829062297423,
+    "rmse_test": 85.8896715975006,
+    "n_features": 14
+  },
+  "dso2": {
+    "silhouette_score": 0.15796213509082374,
+    "n_clusters": 4,
+    "n_features": 11
+  },
+  "dso3": {
+    "n_casual_recs": 10,
+    "n_registered_recs": 10
+  },
+  "date_creation": "2025-12-13 22:21:14"
+}
